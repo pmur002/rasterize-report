@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="utf-8"?>
+<html>
+<head>
+  <style type="text/css">
+    @media print {
+      body { }
+      p.img { text-align: center; page-break-inside: avoid }
+      img.CC { display: inline }
+    }
+    @media screen {
+      body { max-width: 800px; margin: auto }
+      p.img { text-align: center }
+      img.CC { display: inline }
+    }
+    p.date {
+      font-size: smaller;
+      margin: 0;
+    }
+    p.versionHistory {
+      color: gray
+    }
+    p.versionHistory a {
+      color: gray
+    }
+    p.ref {
+      text-indent: -2em;
+      padding-left: 2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Selective Raster Graphics</h1>
+  <p>
+    <span style="font-style: italic">by Paul Murrell</span>
+    <a href="http://orcid.org"><img alt="" src="https://www.stat.auckland.ac.nz/~paul/ORCID/ORCiD.png" style="width: 16px; height: 16px; vertical-align: middle" /></a> <span style="font-family: mono; font-size: small"><a href="http://orcid.org/0000-0002-3224-8858">http://orcid.org/0000-0002-3224-8858</a></span>
+  </p>
+  <p class="date">
+    Version 1:
+    <rcode echo="FALSE" results="asis">
+cat(format(Sys.Date(), "%A %d %B %Y"))
+    </rcode>
+  </p>
+
+  <rcode id="init" echo="FALSE" message="FALSE" results="hide">
+opts_chunk$set(comment=" ", tidy=FALSE)
+options(width=100)
+## For wonky desktop set up
+options(bitmapType="cairo")
+  </rcode>
+  <rcode echo="FALSE">
+    library(grid)
+  </rcode>
+
+  <hr/>
+  <p>
+    <a rel="license"
+    href="http://creativecommons.org/licenses/by/4.0/"><img class="CC"
+    alt="Creative Commons License" style="border-width:0"
+    src="https://i.creativecommons.org/l/by/4.0/88x31.png"/></a><br/><span
+    xmlns:dct="http://purl.org/dc/terms/"
+    property="dct:title">This document</span>
+    by <span xmlns:cc="http://creativecommons.org/ns#"
+    property="cc:attributionName">Paul
+    Murrell</span> is licensed under a <a rel="license"
+    href="http://creativecommons.org/licenses/by/4.0/">Creative
+    Commons Attribution 4.0 International License</a>.
+  </p>
+  <hr/>
+  <p>
+    This report explores ways to render selective components of a plot
+    in raster format, when the overall format of the plot is vector,
+    using R graphics.
+    An application of this technique involves drawing a large number
+    of raster data symbols within a PDF plot.
+  </p>
+
+  <toc/>
+
+  <h2><a name="intro">The problem</a></h2>
+  <p>
+    A question on R-help
+    (Ronaldo Fisher, "Rasterize plot in PDF output", 2018-01-30) asked about
+    rasterizing just the points within a PDF plot.
+    The main issue was that, if a plot has a very large points, 
+    a fully vectorised PDF document
+    can be very large and very slow to view.
+    If we rasterize the points, the file size is reduced and
+    viewing is much faster.
+    However, the key is to rasterize <em>only</em> the points, so that, 
+    for example, the text labels on the plot remain nicely vectorized.
+  </p>
+  <p>
+    The following code generates an example of this sort of problem.
+    We are generating an SVG document rather than PDF, because this
+    is an HTML report, but the 
+    principle remains the same
+    (and the file size issue becomes even more urgent).
+  </p>
+  <rcode id="ggplot2lib">
+## For data set
+library(ggplot2)    
+  </rcode>
+  <rcode id="latticelib">
+library(lattice)    
+  </rcode>
+  <rcode id="slow" results="hide" message="FALSE" eval="TRUE" fig.keep="none">
+svg("slow.svg")
+panelDefault <- function(x, y, ...) {
+    panel.abline(h=seq(0, 15000, 5000), v=0:5, col="grey")
+    panel.xyplot(x, y, ...)
+}
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=function(x, y, ...) {
+           panelDefault(x, y, ...)
+       })
+grid.text("slow", x=0, y=1, just=c("left", "top"), 
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <rcode id="slowpng" results="hide" message="FALSE" eval="TRUE" fig.keep="none">
+png("slow.png")  
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=function(x, y, ...) {
+           panelDefault(x, y, ...)
+       })
+grid.text("slow", x=0, y=1, just=c("left", "top"), 
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <a href="slow.svg"><img src="slow.png" width="70%"/></a>
+  </p>
+  <p>
+    There are over 50,000 data symbols in this plot and the resulting 
+    SVG is over 13MB in size.  The image shown above in this report
+    is actually a PNG version (so that the image loads promptly in the
+    report), but clicking on the image will load the SVG version
+    and we can experience just how slow that image is to load and view.
+  </p>
+  <rcode>
+file.size("slow.svg")
+  </rcode>
+
+  <p>
+    In the R-help post, it was pointed out that  it is possible to
+    draw a PDF plot in which only the data symbols are rasterized using
+    <a href="http://www.astrobetter.com/blog/2014/01/17/slim-down-your-bloated-graphics/">Python's matplotlib</a> 
+    (CITE!)
+    (the <code>plot</code> function in matplotlib 
+    has a <code>rasterized</code> argument).
+    In this report, we will investigate whether we can do the same sort
+    of thing in R.  Spoiler:  the answer is "yes", but there are
+    some devils in the details.
+  </p>
+
+  <h2><a name="solution-lattice">Rasterizing just the points in a 'lattice' plot</a></h2>
+  <p>
+    What we want to do is render most of the plot in a vector format and
+    render just the data symbols in a raster format.  A 'lattice' plot is
+    set up quite well for this because we can specify our own "panel function"
+    to draw the data symbols.  The following code defines a panel
+    function that opens a PNG graphics device the same size as the
+    'lattice' panel, sets up a 'grid' viewport with the same scales
+    as the panel, draws the data symbols (just as 'lattice' would have
+    done itself), closes the PNG device, reads the resulting PNG file
+    into R and draws that raster image within the 'lattice' panel.
+  </p>
+  <rcode id="pnglib">
+library(png)    
+  </rcode>
+  <rcode id="gridlib">
+library(grid)    
+  </rcode>
+  <rcode id="rasterpanel">
+rasterPoints <- function(x, y, ...) {
+    w <- convertWidth(unit(1, "npc"), "in", valueOnly=TRUE)
+    h <- convertHeight(unit(1, "npc"), "in", valueOnly=TRUE)
+    cvp <- current.viewport()
+    dev <- dev.cur()
+    png("temp.png", width=w*72, height=h*72)
+    pushViewport(viewport(xscale=cvp$xscale, yscale=cvp$yscale))
+    panelDefault(x, y, ...)
+    dev.off()
+    dev.set(dev)
+    raster <- readPNG("temp.png")
+    grid.raster(raster)
+}        
+  </rcode>
+  <p>
+    If we use that panel function on the same plot as before, we get
+    the same result.
+  </p>
+  <rcode id="fast" results="hide" fig.keep="none" eval="TRUE">
+svg("fast.svg")
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=rasterPoints)
+grid.text("fast", x=0, y=1, just=c("left", "top"),
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <img src="fast.svg" width="70%"/>
+  </p>
+  <p>
+    However, the file size is now very much smaller (69KB instead of 13MB) and, 
+    this time, we can afford to use the SVG itself in the report because
+    the image loads much more rapidly.
+  </p>
+  <rcode>
+file.size("fast.svg")
+  </rcode>
+
+  <p>
+    Version with in-memory raster (do not have to touch file system)
+  </p>
+  <rcode id="magicklib" message="FALSE">
+library(magick)
+  </rcode>
+  <rcode id="magickpanel">
+magickPoints <- function(x, y, ...) {
+    w <- convertWidth(unit(1, "npc"), "in", valueOnly=TRUE)
+    h <- convertHeight(unit(1, "npc"), "in", valueOnly=TRUE)
+    cvp <- current.viewport()
+    dev <- dev.cur()
+    raster <- image_graph(width=w*72, height=h*72)
+    pushViewport(viewport(xscale=cvp$xscale, yscale=cvp$yscale))
+    panelDefault(x, y, ...)
+    dev.off()
+    dev.set(dev)
+    grid.raster(raster)
+}        
+  </rcode>
+  <rcode id="fast-magick" results="hide" fig.keep="none" eval="TRUE">
+svg("fast-magick.svg")
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=rasterPoints)
+grid.text("magick", x=0, y=1, just=c("left", "top"), 
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <img src="fast-magick.svg" width="70%"/>
+  </p>
+
+  <h2><a name="solution-general">Rasterizing any 'grid' output</a></h2>
+  <p>
+    TODO: generic grid.rasterize(x=gPath, grep=, global=) function.
+    Demo by producing horrible rasterization of just text label.
+    Also allow 'x' to be character OR function.  Demonstrate
+    the function version as simpler code for original 'lattice'
+    example.
+  </p>
+  <rcode id="rasterizelib">
+library(rasterize)
+  </rcode>
+  <rcode id="rasterize" results="hide" fig.keep="none" eval="TRUE">
+svg("rasterize.svg")
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=function(x, y, ...) {
+           grid.rasterize(function() panelDefault(x, y, ...))
+       })
+grid.text("'rasterize'", x=0, y=1, just=c("left", "top"),
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <img src="rasterize.svg" width="70%"/>
+  </p>
+
+  <rcode id="rasterize-label" results="hide" fig.keep="none" eval="TRUE">
+svg("rasterize-label.svg")
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=function(x, y, ...) {
+           grid.rasterize(function() panelDefault(x, y, ...))
+       })
+downViewport("plot_01.xlab.vp")
+grid.rasterize("xlab", grep=TRUE)
+upViewport(0)
+grid.text("label", x=0, y=1, just=c("left", "top"),
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <img src="rasterize-label.svg" width="70%"/>
+  </p>
+
+  <rcode id="rasterize-hires" results="hide" fig.keep="none" eval="TRUE">
+svg("rasterize-hires.svg")
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=function(x, y, ...) {
+           grid.rasterize(function() panelDefault(x, y, ...))
+       })
+downViewport("plot_01.xlab.vp")
+grid.rasterize("xlab", grep=TRUE, res=200)
+upViewport(0)
+grid.text("hires", x=0, y=1, just=c("left", "top"),
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <img src="rasterize-hires.svg" width="70%"/>
+  </p>
+
+  <rcode id="rasterize-ggplot2" results="hide" fig.keep="none" eval="TRUE">
+svg("rasterize-ggplot2.svg")
+ggplot(diamonds) + 
+    geom_point(aes(x=carat, y=price), alpha=.1)
+grid.force()
+downViewport("panel.6-4-6-4")
+grid.rasterize("points", grep=TRUE)
+upViewport(0)
+grid.text("ggplot2", x=0, y=1, just=c("left", "top"),
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <img src="rasterize-ggplot2.svg" width="70%"/>
+  </p>
+
+  <rcode id="rasterize-graphics" results="hide" fig.keep="none" eval="TRUE">
+svg("rasterize-graphics.svg")
+dev.control(displaylist="enable")
+plot(price ~ carat, diamonds, type="n")
+abline(h=seq(0, 15000, 5000), v=0:5, col="grey")
+points(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1))
+library(gridGraphics)
+grid.echo()
+downViewport("graphics-window-1-1")
+grid.rasterize("points", grep=TRUE)
+upViewport(0)
+grid.text("graphics", x=0, y=1, just=c("left", "top"),
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <img src="rasterize-graphics.svg" width="70%"/>
+  </p>
+
+  <h2><a name="solution-limitations">Limitations of 'rasterize'</a></h2>
+  <p>
+    TODO: Demonstration of limitation that cannot have dependency on other grob
+    UNLESS you rasterize all dependent grobs (but even then the grobs
+    have to be in the same viewport and not part of some larger
+    gTree, i.e., the example that works below only works because it
+    is very simple).
+  </p>
+  <rcode results="hide">
+svg("fast-dependency-fail.svg", width=2, height=1)
+grid.circle(r=.3, name="c")
+grid.rect(x=grobX("c", 0), just="left",
+          width=.2, height=.3, name="r")
+grid.rasterize("r")
+dev.off()
+  </rcode>
+
+  <rcode results="hide">
+svg("fast-dependency-succeed.svg", width=2, height=1)
+grid.circle(r=.3, name="c")
+grid.rect(x=grobX("c", 0), just="left",
+          width=.2, height=.3, name="r")
+grid.rasterize("r|c", grep=TRUE, global=TRUE, merge=TRUE)
+dev.off()
+  </rcode>
+  <p>
+    <img src="fast-dependency-succeed.svg" width="70%"/>
+  </p>
+
+  <p>
+    TODO: Demonstration that CAN have dependency on more than
+    just current viewport (grob being drawn can have 'vp' argument that
+    contains a vpPath) because the whole vpTree (below the current
+    viewport) is recreated, not just the current viewport.
+  </p>
+
+
+  <h2><a name="solution-alternative">Alternative rasterizing approaches</a></h2>
+  <p>
+    Version with complete plot raster then cropping (allows for
+    dependency between raster grobs and other grobs).
+    NOTE that this requires R-devel !!! (for deviceLoc()).
+    Also NOTE that the cropping uses vertical offset with zero at top
+    (hence calculate top of viewport and subtract that from
+    full device height to get vertical offset).
+    ALSO also NOTE that the result is not quite aligned
+    (and this is NOT just rounding of pixel values for cropping)
+  </p>  
+  <rcode id="croppanel" results="hide">
+## External PNG version
+cropenv <- new.env()
+png("crop.png", width=7*72, height=7*72)
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=function(x, y, ...) {
+           assign("panelXY",
+                  deviceLoc(unit(0, "npc"), unit(1, "npc"), valueOnly=TRUE),
+                  envir=cropenv)
+           assign("panelW",
+                  convertWidth(unit(1, "npc"), "in", valueOnly=TRUE),
+                  envir=cropenv)
+           assign("panelH",
+                  convertHeight(unit(1, "npc"), "in", valueOnly=TRUE),
+                  envir=cropenv)
+           panelDefault(x, y, ...)
+       })
+dev.off()
+raster <- image_read("crop.png")
+rasterCrop <- image_crop(raster, 
+                         paste0(get("panelW", envir=cropenv)*72, "x", 
+                                get("panelH", envir=cropenv)*72, "+", 
+                                get("panelXY", envir=cropenv)$x*72, "+", 
+                                7*72 - get("panelXY", envir=cropenv)$y*72),
+                         repage=TRUE)
+cropPoints <- function(x, y, ...) {
+    grid.raster(rasterCrop)
+}        
+  </rcode>
+  <rcode id="crop-panel-magick" echo="FALSE" eval="FALSE">
+## This in-memory version does not work
+## Some metrics must be slightly off
+cropenv <- new.env()
+raster <- image_graph(width=7*72, height=7*72)
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=function(x, y, ...) {
+           assign("panelXY",
+                  deviceLoc(unit(0, "npc"), unit(1, "npc"), valueOnly=TRUE),
+                  envir=cropenv)
+           assign("panelW",
+                  convertWidth(unit(1, "npc"), "in", valueOnly=TRUE),
+                  envir=cropenv)
+           assign("panelH",
+                  convertHeight(unit(1, "npc"), "in", valueOnly=TRUE),
+                  envir=cropenv)
+           panelDefault(x, y, ...)
+       })
+dev.off()
+rasterCrop <- image_crop(raster, 
+                         paste0(get("panelW", envir=cropenv)*72, "x", 
+                                get("panelH", envir=cropenv)*72, "+", 
+                                get("panelXY", envir=cropenv)$x*72, "+", 
+                                7*72 - get("panelXY", envir=cropenv)$y*72),
+                         repage=TRUE)
+cropPoints <- function(x, y, ...) {
+    grid.raster(rasterCrop)
+}        
+  </rcode>
+  <rcode id="fast-crop" results="hide" fig.keep="none" eval="TRUE">
+svg("fast-crop.svg")
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=cropPoints)
+grid.text("crop", x=0, y=1, just=c("left", "top"), 
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <img src="fast-crop.svg" width="70%"/>
+  </p>
+
+  <p>
+    TODO: Demonstration of limitation that crop method does not work for
+    rotated viewports (but per-grob-raster does).
+  </p>
+
+  <p>
+    Version where full plot is rasterized then clipping is used to
+    only show desired portion.  Need to use 'gridSVG' to get rotated
+    viewport clipping, plus to be able to apply clipping to a grob.
+  </p>
+  <rcode id="clippanel" results="hide">
+png("clip.png", width=7*72, height=7*72)
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=function(x, y, ...) {
+           panelDefault(x, y, ...)
+       })
+dev.off()
+raster <- image_read("clip.png")
+  </rcode>
+  <rcode id="fast-clip" results="hide" message="FALSE" fig.keep="none" eval="TRUE">
+library(gridSVG)
+gridsvg("fast-clip.svg")
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=function(x, y, ...) {
+           grid.rect(gp=gpar(col=NA, fill=NA), name="vprect")
+       })
+cp <- clipPath(grid.get("vprect"))
+grid.raster(raster, name="raster")
+grid.clipPath("raster", cp)
+grid.text("clip", x=0, y=1, just=c("left", "top"), 
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <img src="fast-clip.svg" width="70%"/>
+  </p>
+
+  <p>
+    Demonstration of limitation that cannot have overlap with other grob
+    that we do NOT want to rasterize.
+  </p>
+  <rcode id="overlap-problem" results="hide">
+overlapEnv <- new.env()
+png("temp.png", width=7*72, height=7*72)
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=function(x, y, ...) {
+           assign("panelXY",
+                  deviceLoc(unit(0, "npc"), unit(1, "npc"), valueOnly=TRUE),
+                  envir=overlapEnv)
+           assign("panelW",
+                  convertWidth(unit(1, "npc"), "in", valueOnly=TRUE),
+                  envir=overlapEnv)
+           assign("panelH",
+                  convertHeight(unit(1, "npc"), "in", valueOnly=TRUE),
+                  envir=overlapEnv)
+           panel.abline(h=seq(0, 15000, 5000), v=0:5, col="grey")
+           panel.xyplot(x, y, ...)
+           panel.text("A LABEL\nTHAT ALSO\nGETS RASTERIZED", x=4, y=5000)
+       })
+dev.off()
+raster <- image_read("temp.png")
+rasterOverlap <- image_crop(raster, 
+                         paste0(get("panelW", envir=overlapEnv)*72, "x", 
+                                get("panelH", envir=overlapEnv)*72, "+", 
+                                get("panelXY", envir=overlapEnv)$x*72, "+", 
+                                7*72 - get("panelXY", envir=overlapEnv)$y*72),
+                         repage=TRUE)
+overlapPoints <- function(x, y, ...) {
+    grid.raster(rasterOverlap)
+}        
+  </rcode>
+  <rcode id="fast-overlap" results="hide" fig.keep="none" eval="TRUE">
+svg("fast-overlap.svg")
+xyplot(price ~ carat, diamonds, pch=16, col=rgb(0,0,0,.1),
+       panel=overlapPoints)
+grid.text("overlap", x=0, y=1, just=c("left", "top"), 
+          gp=gpar(fontface="italic", col="grey"))
+dev.off()
+  </rcode>
+  <p>
+    <img src="fast-overlap.svg" width="70%"/>
+  </p>
+
+  <p>
+    TODO: Add "crop" argument to grid.rasterize() ?  So can choose whether
+    to draw just relevant grob off-screen or crop entire off-screen plot.
+  </p>
+
+  <p>
+    TODO: Does a rasterizeGrob() function make sense ?
+    (rasterize as you draw?  pass to gridExtra::grid.arrange() ?)  
+  </p>
+
+  <h2><a name="discussion">Discussion</a></h2>
+  <p>
+    Why not use something else (like hexbin or smoothScatter or 2D density ...)?
+    Because sometimes you want all the points?
+  </p>
+  <p>
+    If we use grid.rasterize() with PDF output, we will end up with
+    multiple pages, so use onefile=FALSE.
+  </p>
+  <p>
+    It is not just large numbers of points that can be a nuisance; 
+    another issue (see 
+    <a href="https://osxastrotricks.wordpress.com/2014/01/19/rasterized-graphics-with-matplotlib-to-preserve-plot-transparencies-for-apj-figures/">here</a>
+    and 
+    <a href="https://brushingupscience.wordpress.com/2017/05/09/vector-and-raster-in-one-with-matplotlib/">here</a>)
+    is producing EPS format (to satisfy journal requirements) for
+    figures that contain semi-transparency (so you have to embed a raster
+    within EPS).
+  </p>
+  <p>
+    matplotlib does not have the raster-by-name that I am shooting for,
+    but it does do raster-by-z-order (and you can specify z-order for
+    each component that you draw).
+  </p>
+  <p>
+    matplotlib seems to have the concept of a 
+    <a href="https://matplotlib.org/api/backend_mixed_api.html">mixed mode
+    renderer</a> that can switch between vector and raster formatted output.
+    Sounds a bit like my 'lattice' panel function that generates
+    and embeds raster image on the fly.
+    Its <a href="https://github.com/matplotlib/matplotlib/blob/master/src/_backend_agg_wrapper.cpp">raster backend</a> is based on the
+    <a href="http://antigrain.com/about/index.html">Anit-Grain Geometry project</a>.
+  </p>
+
+  <h2><a name="summary">Summary</a></h2>
+  <p>
+  </p>
+
+  <h2><a name="requirements">Technical requirements</a></h2>
+  <p>
+    The examples and discussion in this document relate to
+    version 0.1 of the 'rasterize' package.
+    The cropping and clipping methods rely on deviceLoc from
+    R-to-be-3.5.0 (?)
+  </p>
+  <p>
+    This report was generated within a Docker container
+    (see <a href="#Resources">Resources</a> section below).
+  </p>
+
+  <h2><a name="Resources">Resources</a></h2>
+  <ul>
+    <li>
+      The <a href="rasterize.cml">raw source file</a> for this
+      report, a <a href="rasterize.xml">valid XML</a>
+      transformation of the source file, a <a
+      href="rasterize.Rhtml">'knitr' document</a> generated from
+      the XML file, 
+      two <a href="toc.R">R</a> <a href="bib.R">files</a> and
+      the <a href="rasterize.bib">bibtex file</a>
+      that are used to generate the table of contents and reference sections,
+      two <a href="common.xsl">XSL</a> <a
+      href="knitr.xsl">files</a> and an 
+      <a href="knit.R">R file</a> that are used to transform the XML to
+      the 'knitr' document, and a <a href="Makefile">Makefile</a> that
+      contains code for the other transformations and coordinates
+      everything.  
+      These materials are also available
+      on <a href="https://github.com/pmur002/rasterize-report/releases/tag/v1">github</a>.
+    </li>
+    <li>
+      This report was generated within a 
+      <a href="https://www.docker.com/">Docker</a> container.
+      The Docker command to build the report is included in the Makefile above.
+      The Docker image for the container is available from
+      <a href="https://hub.docker.com/r/pmur002/rasterize/">Docker Hub</a>;
+      alternatively, the image can be rebuilt from its 
+      <a href="Dockerfile">Dockerfile</a>.
+    </li>
+  </ul>
+
+  <h2>How to cite this document</h2>
+  <p>
+    Murrell, P. (2018). "Selective Raster Graphics" 
+    Technical Report 2018-??, Department of Statistics, The University of Auckland. 
+    [ <a href="how-to-cite.bib">bib</a> ] 
+  </p>
+
+  <h2><a name="references">References</a></h2>
+  <ul style="list-style-type: none">
+    <li>
+      <a name="R"/>
+    </li>
+  </ul>
+
+  <hr/>
+  <p>
+    <a rel="license"
+    href="http://creativecommons.org/licenses/by/4.0/"><img class="CC"
+    alt="Creative Commons License" style="border-width:0"
+    src="https://i.creativecommons.org/l/by/4.0/88x31.png"/></a><br/><span
+    xmlns:dct="http://purl.org/dc/terms/"
+    property="dct:title">This document</span>
+    by <span xmlns:cc="http://creativecommons.org/ns#"
+    property="cc:attributionName">Paul
+    Murrell</span> is licensed under a <a rel="license"
+    href="http://creativecommons.org/licenses/by/4.0/">Creative
+    Commons Attribution 4.0 International License</a>.
+  </p>
+
+</body>
+</html>
