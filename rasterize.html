@@ -103,7 +103,7 @@
     </p>
     <p class="date">
     Version 1:
-Tuesday 22 May 2018
+Wednesday 23 May 2018
   </p>
 
 
@@ -160,10 +160,10 @@ Tuesday 22 May 2018
       <a name="intro">1. The problem</a>
     </h2>
     <p>
-    A question on R-help
+    A <a href="https://stat.ethz.ch/pipermail/r-help/2018-January/451037.html">question on R-help</a>
     (Ronaldo Fisher, "Rasterize plot in PDF output", 2018-01-30) asked about
     rasterizing just the points within a PDF plot.
-    The main issue was that, if a plot has a very large points, 
+    If a plot has a very large number of points, 
     a fully vectorised PDF document
     can be very large and very slow to view.
     If we rasterize the points, the file size is reduced and
@@ -177,6 +177,13 @@ Tuesday 22 May 2018
     is an HTML report, but the 
     principle remains the same
     (and the file size issue becomes even more urgent).
+    This produces a 'lattice' scatter plot of the <code>diamonds</code> data set
+    with reference grid lines.  We define a <code>panelDefault</code>
+    function so that we can reproduce the main content of the plot 
+    reliably later on, the grid lines will help us to ensure that we
+    are reproducing the main content of the plot accurately, and a 
+    label is added at top-left so that we can distinguish between
+    plots that otherwise are intentionally identical.
   </p>
 <div class="chunk" id="ggplot2lib"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl com">## For data set</span>
 <span class="hl kwd">library</span><span class="hl std">(ggplot2)</span>
@@ -185,11 +192,13 @@ Tuesday 22 May 2018
 <div class="chunk" id="latticelib"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">library</span><span class="hl std">(lattice)</span>
 </pre></div>
 </div></div>
-<div class="chunk" id="slow"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;slow.svg&quot;</span><span class="hl std">)</span>
-<span class="hl std">panelDefault</span> <span class="hl kwb">&lt;-</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
+<div class="chunk" id="paneldefault"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">panelDefault</span> <span class="hl kwb">&lt;-</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
     <span class="hl kwd">panel.abline</span><span class="hl std">(</span><span class="hl kwc">h</span><span class="hl std">=</span><span class="hl kwd">seq</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl num">15000</span><span class="hl std">,</span> <span class="hl num">5000</span><span class="hl std">),</span> <span class="hl kwc">v</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl opt">:</span><span class="hl num">5</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">)</span>
     <span class="hl kwd">panel.xyplot</span><span class="hl std">(x, y, ...)</span>
 <span class="hl std">}</span>
+</pre></div>
+</div></div>
+<div class="chunk" id="slow"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;slow.svg&quot;</span><span class="hl std">)</span>
 <span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
        <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
            <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...)</span>
@@ -199,16 +208,7 @@ Tuesday 22 May 2018
 <span class="hl kwd">dev.off</span><span class="hl std">()</span>
 </pre></div>
 </div></div>
-<div class="chunk" id="slowpng"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">png</span><span class="hl std">(</span><span class="hl str">&quot;slow.png&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
-       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
-           <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...)</span>
-       <span class="hl std">})</span>
-<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;slow&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
-          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
-<span class="hl kwd">dev.off</span><span class="hl std">()</span>
-</pre></div>
-</div></div>
+
     <p>
       <a href="slow.svg">
         <img src="slow.png" width="70%">
@@ -274,7 +274,10 @@ Tuesday 22 May 2018
 </div></div>
     <p>
     If we use that panel function on the same plot as before, we get
-    the same result.
+    the same result, though the points and grid lines are now a raster
+    image.  The fact that the (raster) grid lines still align with the 
+    (vector) tick marks on the axes tells us that the raster points and lines
+    are an accurate reproduction of the original vector points and lines.
   </p>
 <div class="chunk" id="fast"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;fast.svg&quot;</span><span class="hl std">)</span>
 <span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
@@ -288,8 +291,10 @@ Tuesday 22 May 2018
       <img src="fast.svg" width="70%">
     </p>
     <p>
-    However, the file size is now very much smaller (69KB instead of 13MB) and, 
-    this time, we can afford to use the SVG itself in the report because
+    However, because the points and lines in the plot are now a raster image,
+    the file size is now very much smaller (76KB instead of 13MB) and, 
+    this time, we can afford to embed the actual SVG image 
+    itself in the report because
     the image loads much more rapidly.
   </p>
 <div class="chunk" id="unnamed-chunk-4"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">file.size</span><span class="hl std">(</span><span class="hl str">&quot;fast.svg&quot;</span><span class="hl std">)</span>
@@ -298,7 +303,328 @@ Tuesday 22 May 2018
 </pre></div>
 </div></div>
     <p>
-    Version with in-memory raster (do not have to touch file system)
+    Another way to approach the problem is to draw the entire plot
+    first and then replace the vector content with a raster version.
+    This time, the code draws the complete 'lattice' plot,
+    then navigates to the panel viewport, removes the points and grid lines,
+    and adds a raster version of the points and grid lines (we have just
+    reused the raster from the previous example because the plot is 
+    identical).
+  </p>
+<div class="chunk" id="rasterreplace"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;fast-replace.svg&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
+       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
+           <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...)</span>
+       <span class="hl std">})</span>
+<span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl str">&quot;plot_01.panel.1.1.vp&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.remove</span><span class="hl std">(</span><span class="hl str">&quot;abline|points&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">,</span> <span class="hl kwc">global</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl std">raster</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">readPNG</span><span class="hl std">(</span><span class="hl str">&quot;temp.png&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.raster</span><span class="hl std">(raster)</span>
+<span class="hl kwd">upViewport</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">)</span>
+<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;replace&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
+          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+    <p>
+      <img src="fast-replace.svg" width="70%">
+    </p>
+    <p>
+    Again, the final combination of vector axes and labels plus raster points 
+    and lines is much smaller than the complete vector plot.
+  </p>
+<div class="chunk" id="unnamed-chunk-5"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">file.size</span><span class="hl std">(</span><span class="hl str">&quot;fast-replace.svg&quot;</span><span class="hl std">)</span>
+</pre></div>
+<div class="output"><pre class="knitr r">  [1] 76721
+</pre></div>
+</div></div>
+    <h2>
+      <a name="solution-general">3. Rasterizing any 'grid' output</a>
+    </h2>
+    <p>
+    The package 'rasterize' provides a function 
+    <code>grid.rasterize</code> that generalises and extends
+    the two approaches described in the previous section.
+  </p>
+<div class="chunk" id="rasterizelib"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">library</span><span class="hl std">(rasterize)</span>
+</pre></div>
+</div></div>
+    <p>  
+    If the first argument to <code>grid.rasterize</code> is a function
+    then a raster version of the graphical output from the function
+    is produced within the current viewport.  The following code
+    shows that this can be used within a 
+    'lattice' panel function to generate raster content within
+    the panel of a 'lattice' plot.
+  </p>
+<div class="chunk" id="rasterize"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;rasterize.svg&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
+       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
+           <span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl kwa">function</span><span class="hl std">()</span> <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...))</span>
+       <span class="hl std">})</span>
+<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;'rasterize'&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
+          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+    <p>
+      <img src="rasterize.svg" width="70%">
+    </p>
+    <p>
+    If the first argument to <code>grid.rasterize</code> is 
+    the name of a grob (or a gPath), then that grob is 
+    replaced by a raster rendering of the grob.
+    The following code demonstrates this by first drawing
+    a 'lattice' plot (with rasterized panel contents)
+    and then rasterizes the x-axis label on the plot.
+    Notice that we have to navigate to the viewport
+    that the x-axis label was drawn within so that the
+    raster version of the x-axis label is the correct size.
+  </p>
+<div class="chunk" id="rasterize-label"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;rasterize-label.svg&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
+       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
+           <span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl kwa">function</span><span class="hl std">()</span> <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...))</span>
+       <span class="hl std">})</span>
+<span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl str">&quot;plot_01.xlab.vp&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;xlab&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl kwd">upViewport</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">)</span>
+<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;label&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
+          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+    <p>
+      <img src="rasterize-label.svg" width="70%">
+    </p>
+    <p>
+    In the plot above, it should be possible to see that the x-axis label
+    is a raster version because it looks a little blurry.  That is because
+    the default resolution for the rasterizing process is 72 dpi.
+    We can control the resolution with the <code>res</code> argument
+    to <code>grid.rasterize</code>.  The following code increases the
+    resolution up to 200 dpi.
+  </p>
+<div class="chunk" id="rasterize-hires"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;rasterize-hires.svg&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
+       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
+           <span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl kwa">function</span><span class="hl std">()</span> <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...))</span>
+       <span class="hl std">})</span>
+<span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl str">&quot;plot_01.xlab.vp&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;xlab&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">,</span> <span class="hl kwc">res</span><span class="hl std">=</span><span class="hl num">200</span><span class="hl std">)</span>
+<span class="hl kwd">upViewport</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">)</span>
+<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;hires&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
+          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+    <p>
+      <img src="rasterize-hires.svg" width="70%">
+    </p>
+    <p>
+    This ability to rasterize any component of a 'grid' image makes it easy
+    to produce a 'ggplot2' version of the diamonds plot (with rasterized
+    points).  The following code shows how this might work; notice 
+    that we have to call <code>grid.force</code> after drawing the
+    'ggplot2' plot in order to gain access to the low-level 'grid' grobs
+    (and the 'grid' viewports) 
+    in the plot.
+  </p>
+<div class="chunk" id="rasterize-ggplot2"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;rasterize-ggplot2.svg&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">ggplot</span><span class="hl std">(diamonds)</span> <span class="hl opt">+</span>
+    <span class="hl kwd">geom_point</span><span class="hl std">(</span><span class="hl kwd">aes</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=carat,</span> <span class="hl kwc">y</span><span class="hl std">=price),</span> <span class="hl kwc">alpha</span><span class="hl std">=</span><span class="hl num">.1</span><span class="hl std">)</span>
+<span class="hl kwd">grid.force</span><span class="hl std">()</span>
+<span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl str">&quot;panel.6-4-6-4&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;points&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl kwd">upViewport</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">)</span>
+<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;ggplot2&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
+          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+    <p>
+      <img src="rasterize-ggplot2.svg" width="70%">
+    </p>
+    <p>
+    The next code shows how we can also produce a 'graphics' version
+    of the diamonds plot (with rasterized points).  In this case,
+    the important step is to convert the 'graphics' plot to a 'grid'
+    version, using <code>grid.echo</code> from the 'gridGraphics'
+    package.
+  </p>
+<div class="chunk" id="rasterize-graphics"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;rasterize-graphics.svg&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">dev.control</span><span class="hl std">(</span><span class="hl kwc">displaylist</span><span class="hl std">=</span><span class="hl str">&quot;enable&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">plot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">type</span><span class="hl std">=</span><span class="hl str">&quot;n&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">abline</span><span class="hl std">(</span><span class="hl kwc">h</span><span class="hl std">=</span><span class="hl kwd">seq</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl num">15000</span><span class="hl std">,</span> <span class="hl num">5000</span><span class="hl std">),</span> <span class="hl kwc">v</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl opt">:</span><span class="hl num">5</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">points</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">))</span>
+<span class="hl kwd">library</span><span class="hl std">(gridGraphics)</span>
+<span class="hl kwd">grid.echo</span><span class="hl std">()</span>
+<span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl str">&quot;graphics-window-1-1&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;points&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl kwd">upViewport</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">)</span>
+<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;graphics&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
+          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+    <p>
+      <img src="rasterize-graphics.svg" width="70%">
+    </p>
+    <h2>
+      <a name="solution-limitations">4. Limitations of 'rasterize'</a>
+    </h2>
+    <p>
+    The <code>grid.rasterize</code> function works by 
+    drawing sub-components of a plot on a temporary PNG graphics
+    device.
+    The examples in the previous section have been quite simple
+    at least in the sense that we have only been rasterizing one or two
+    components of a plot (points plus sometimes grid lines) and 
+    the grobs involved have not been dependent on each other in any way. 
+    This is simple because it means that we can render a raster version
+    of those grobs just by drawing the grobs themselves.
+  </p>
+    <p>
+    The following code shows a very small example of a situation
+    that is much more complex.  In this drawing, there is only a circle and
+    a rectangle, but the location of the rectangle is based on the right-hand
+    edge of the circle.
+  </p>
+<div class="chunk" id="unnamed-chunk-6"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;fast-dependency.svg&quot;</span><span class="hl std">,</span> <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">2</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
+<span class="hl kwd">grid.circle</span><span class="hl std">(</span><span class="hl kwc">r</span><span class="hl std">=</span><span class="hl num">.3</span><span class="hl std">,</span> <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;c&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.rect</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=</span><span class="hl kwd">grobX</span><span class="hl std">(</span><span class="hl str">&quot;c&quot;</span><span class="hl std">,</span> <span class="hl num">0</span><span class="hl std">),</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span>
+          <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">.2</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">.3</span><span class="hl std">,</span> <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;r&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+    <p>
+      <img src="fast-dependency.svg">
+    </p>
+    <p>
+    If we try to rasterize the rectangle in this image, we get an error,
+    because it is not possible to draw a raster version of the rectangle
+    just by itself.  We have to draw the circle before we can draw the 
+    rectangle.
+  </p>
+<div class="chunk" id="unnamed-chunk-7"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;fast-dependency-fail.svg&quot;</span><span class="hl std">,</span> <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">2</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
+<span class="hl kwd">grid.circle</span><span class="hl std">(</span><span class="hl kwc">r</span><span class="hl std">=</span><span class="hl num">.3</span><span class="hl std">,</span> <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;c&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.rect</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=</span><span class="hl kwd">grobX</span><span class="hl std">(</span><span class="hl str">&quot;c&quot;</span><span class="hl std">,</span> <span class="hl num">0</span><span class="hl std">),</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span>
+          <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">.2</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">.3</span><span class="hl std">,</span> <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;r&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;r&quot;</span><span class="hl std">)</span>
+</pre></div>
+<div class="error"><pre class="knitr r">  Error in (function (name) : grob 'c' not found
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+    <p>
+    It is possible to rasterize more than one grob at once.
+    In the code below, we specify <code>grep=TRUE</code> and
+    <code>global=TRUE</code> so that <code>grid.rasterize</code>
+    will attempt to rasterize any grobs with "r" or "c" in their
+    names.  In this case, we also specify <code>merge=TRUE</code>,
+    which means that all matching grobs will be rasterized 
+    together in one image and now the rasterization works.
+  </p>
+<div class="chunk" id="unnamed-chunk-8"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;fast-dependency-succeed.svg&quot;</span><span class="hl std">,</span> <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">2</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
+<span class="hl kwd">grid.circle</span><span class="hl std">(</span><span class="hl kwc">r</span><span class="hl std">=</span><span class="hl num">.3</span><span class="hl std">,</span> <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;c&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.rect</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=</span><span class="hl kwd">grobX</span><span class="hl std">(</span><span class="hl str">&quot;c&quot;</span><span class="hl std">,</span> <span class="hl num">0</span><span class="hl std">),</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span>
+          <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">.2</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">.3</span><span class="hl std">,</span> <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;r&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;r|c&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">,</span> <span class="hl kwc">global</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">,</span> <span class="hl kwc">merge</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+    <p>
+      <img src="fast-dependency-succeed.svg">
+    </p>
+    <p>
+    However, there will be more complex scenarios where rasterization is
+    not possible because it is not possible to render a subset of the
+    overall image in isolation.
+  </p>
+    <p>
+    Another issue with <code>grid.rasterize</code> is that, in order
+    for the rasterized component of a plot to match up with the
+    vectorized component that it is replacing, and to match up with
+    the rest of the vectorized plot, the rasterized version of the
+    image and the vectorized version of the image must be identical,
+    particularly in the placement of different components (e.g.,
+    the sizes of plot margins, the dimensions of text, etc).
+  </p>
+    <p>
+    The easiest way to ensure this consistency in R is to make use
+    of graphics devices that are based on the Cairo graphics library (CITE!).
+    For example, the <code>svg</code> device used in the examples in this
+    report is Cairo-based and this report uses 
+    <code>options(bitmapType="cairo")</code> to ensure that the
+    <code>png</code> device is also Cairo-based.
+    For generating PDF output, the <code>cairo_pdf</code> device
+    would be best, as shown in the following code.
+  </p>
+<div class="chunk" id="rasterize-pdf"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">cairo_pdf</span><span class="hl std">(</span><span class="hl str">&quot;rasterize.pdf&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
+       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
+           <span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl kwa">function</span><span class="hl std">()</span> <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...),</span> <span class="hl kwc">res</span><span class="hl std">=</span><span class="hl num">150</span><span class="hl std">)</span>
+       <span class="hl std">})</span>
+<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;pdf&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
+          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+
+    <p>
+      <img src="rasterize.png" width="70%">
+    </p>
+    <p>
+    Another point to note when working with PDF output is that
+    the approach of rasterizing specific grobs after the plot has been
+    drawn will generate multiple pages of output. The replacement of
+    a grob with a raster rendering of the grob triggers a redraw, which
+    produces a new page.  In this situation, we can create a PDF device
+    with <code>onefile=FALSE</code> so that multiple pages generate
+    multiple PDF files, and then we can just use the final page.
+    The code below demonstrates this idea; the image we want to use
+    will be called <code>"rasterize-post-2.pdf"</code>.
+  </p>
+<div class="chunk" id="rasterize-pdf-post"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">cairo_pdf</span><span class="hl std">(</span><span class="hl str">&quot;rasterize-post-%d.pdf&quot;</span><span class="hl std">,</span> <span class="hl kwc">onefile</span><span class="hl std">=</span><span class="hl num">FALSE</span><span class="hl std">)</span>
+<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
+       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
+           <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...)</span>
+       <span class="hl std">})</span>
+<span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl str">&quot;plot_01.panel.1.1.vp&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;points&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">,</span> <span class="hl kwc">res</span><span class="hl std">=</span><span class="hl num">150</span><span class="hl std">)</span>
+<span class="hl kwd">upViewport</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">)</span>
+<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;pdf-post&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
+          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+
+    <p>
+      <img src="rasterize-post.png" width="70%">
+    </p>
+    <h2>
+      <a name="solution-alternative">5. Alternative rasterizing approaches</a>
+    </h2>
+    <p>
+    This section discusses some alternative approaches to rasterizing
+    only part of a plot.  These approaches have not been implemented
+    in the 'rasterize' package because, as we will see, they each suffer from
+    different problems.  However, it is useful to record why these 
+    approaches fail (so that we do not revisit them unnecessarily in the
+    future) and it is useful to remember these approaches because there
+    may be situations where <code>grid.rasterize</code> fails, but
+    one of these approaches will succeed. 
+  </p>
+    <h3>In-memory rasterization</h3>
+    <p>
+    One change that we could make is to draw the temporary raster image
+    in memory so that we do not have to touch the file system (when
+    we create a temporary PNG image).  This is possible via the
+    'magick' package (CITE!).  The following code is a variation
+    on our very first example, but it uses 
+    <code>magick::image_graph</code> rather than the <code>png</code>
+    device to render the temporary raster image.
   </p>
 <div class="chunk" id="magicklib"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">library</span><span class="hl std">(magick)</span>
 </pre></div>
@@ -328,147 +654,23 @@ Tuesday 22 May 2018
     <p>
       <img src="fast-magick.svg" width="70%">
     </p>
-    <h2>
-      <a name="solution-general">3. Rasterizing any 'grid' output</a>
-    </h2>
     <p>
-    TODO: generic grid.rasterize(x=gPath, grep=, global=) function.
-    Demo by producing horrible rasterization of just text label.
-    Also allow 'x' to be character OR function.  Demonstrate
-    the function version as simpler code for original 'lattice'
-    example.
+    The 'rasterize' package does not currently use 'magick' because
+    the results from its <code>image_graph</code> device are not
+    quite consistent with the Cairo-based devices, so the replacement
+    raster images do not always align with the rest of the plot.
   </p>
-<div class="chunk" id="rasterizelib"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">library</span><span class="hl std">(rasterize)</span>
-</pre></div>
-</div></div>
-<div class="chunk" id="rasterize"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;rasterize.svg&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
-       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
-           <span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl kwa">function</span><span class="hl std">()</span> <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...))</span>
-       <span class="hl std">})</span>
-<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;'rasterize'&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
-          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
-<span class="hl kwd">dev.off</span><span class="hl std">()</span>
-</pre></div>
-</div></div>
+    <h3>Rasterization by cropping</h3>
     <p>
-      <img src="rasterize.svg" width="70%">
-    </p>
-<div class="chunk" id="rasterize-label"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;rasterize-label.svg&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
-       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
-           <span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl kwa">function</span><span class="hl std">()</span> <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...))</span>
-       <span class="hl std">})</span>
-<span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl str">&quot;plot_01.xlab.vp&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;xlab&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
-<span class="hl kwd">upViewport</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">)</span>
-<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;label&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
-          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
-<span class="hl kwd">dev.off</span><span class="hl std">()</span>
-</pre></div>
-</div></div>
-    <p>
-      <img src="rasterize-label.svg" width="70%">
-    </p>
-<div class="chunk" id="rasterize-hires"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;rasterize-hires.svg&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
-       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
-           <span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl kwa">function</span><span class="hl std">()</span> <span class="hl kwd">panelDefault</span><span class="hl std">(x, y, ...))</span>
-       <span class="hl std">})</span>
-<span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl str">&quot;plot_01.xlab.vp&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;xlab&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">,</span> <span class="hl kwc">res</span><span class="hl std">=</span><span class="hl num">200</span><span class="hl std">)</span>
-<span class="hl kwd">upViewport</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">)</span>
-<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;hires&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
-          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
-<span class="hl kwd">dev.off</span><span class="hl std">()</span>
-</pre></div>
-</div></div>
-    <p>
-      <img src="rasterize-hires.svg" width="70%">
-    </p>
-<div class="chunk" id="rasterize-ggplot2"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;rasterize-ggplot2.svg&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">ggplot</span><span class="hl std">(diamonds)</span> <span class="hl opt">+</span>
-    <span class="hl kwd">geom_point</span><span class="hl std">(</span><span class="hl kwd">aes</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=carat,</span> <span class="hl kwc">y</span><span class="hl std">=price),</span> <span class="hl kwc">alpha</span><span class="hl std">=</span><span class="hl num">.1</span><span class="hl std">)</span>
-<span class="hl kwd">grid.force</span><span class="hl std">()</span>
-<span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl str">&quot;panel.6-4-6-4&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;points&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
-<span class="hl kwd">upViewport</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">)</span>
-<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;ggplot2&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
-          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
-<span class="hl kwd">dev.off</span><span class="hl std">()</span>
-</pre></div>
-</div></div>
-    <p>
-      <img src="rasterize-ggplot2.svg" width="70%">
-    </p>
-<div class="chunk" id="rasterize-graphics"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;rasterize-graphics.svg&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">dev.control</span><span class="hl std">(</span><span class="hl kwc">displaylist</span><span class="hl std">=</span><span class="hl str">&quot;enable&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">plot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">type</span><span class="hl std">=</span><span class="hl str">&quot;n&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">abline</span><span class="hl std">(</span><span class="hl kwc">h</span><span class="hl std">=</span><span class="hl kwd">seq</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl num">15000</span><span class="hl std">,</span> <span class="hl num">5000</span><span class="hl std">),</span> <span class="hl kwc">v</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl opt">:</span><span class="hl num">5</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">points</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">))</span>
-<span class="hl kwd">library</span><span class="hl std">(gridGraphics)</span>
-<span class="hl kwd">grid.echo</span><span class="hl std">()</span>
-<span class="hl kwd">downViewport</span><span class="hl std">(</span><span class="hl str">&quot;graphics-window-1-1&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;points&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
-<span class="hl kwd">upViewport</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">)</span>
-<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;graphics&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
-          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
-<span class="hl kwd">dev.off</span><span class="hl std">()</span>
-</pre></div>
-</div></div>
-    <p>
-      <img src="rasterize-graphics.svg" width="70%">
-    </p>
-    <h2>
-      <a name="solution-limitations">4. Limitations of 'rasterize'</a>
-    </h2>
-    <p>
-    TODO: Demonstration of limitation that cannot have dependency on other grob
-    UNLESS you rasterize all dependent grobs (but even then the grobs
-    have to be in the same viewport and not part of some larger
-    gTree, i.e., the example that works below only works because it
-    is very simple).
-  </p>
-<div class="chunk" id="unnamed-chunk-5"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;fast-dependency-fail.svg&quot;</span><span class="hl std">,</span> <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">2</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
-<span class="hl kwd">grid.circle</span><span class="hl std">(</span><span class="hl kwc">r</span><span class="hl std">=</span><span class="hl num">.3</span><span class="hl std">,</span> <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;c&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">grid.rect</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=</span><span class="hl kwd">grobX</span><span class="hl std">(</span><span class="hl str">&quot;c&quot;</span><span class="hl std">,</span> <span class="hl num">0</span><span class="hl std">),</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span>
-          <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">.2</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">.3</span><span class="hl std">,</span> <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;r&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;r&quot;</span><span class="hl std">)</span>
-</pre></div>
-<div class="error"><pre class="knitr r">  Error in (function (name) : grob 'c' not found
-</pre></div>
-<div class="source"><pre class="knitr r"><span class="hl kwd">dev.off</span><span class="hl std">()</span>
-</pre></div>
-</div></div>
-<div class="chunk" id="unnamed-chunk-6"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;fast-dependency-succeed.svg&quot;</span><span class="hl std">,</span> <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">2</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">)</span>
-<span class="hl kwd">grid.circle</span><span class="hl std">(</span><span class="hl kwc">r</span><span class="hl std">=</span><span class="hl num">.3</span><span class="hl std">,</span> <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;c&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">grid.rect</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">=</span><span class="hl kwd">grobX</span><span class="hl std">(</span><span class="hl str">&quot;c&quot;</span><span class="hl std">,</span> <span class="hl num">0</span><span class="hl std">),</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span>
-          <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">.2</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">.3</span><span class="hl std">,</span> <span class="hl kwc">name</span><span class="hl std">=</span><span class="hl str">&quot;r&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">grid.rasterize</span><span class="hl std">(</span><span class="hl str">&quot;r|c&quot;</span><span class="hl std">,</span> <span class="hl kwc">grep</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">,</span> <span class="hl kwc">global</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">,</span> <span class="hl kwc">merge</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
-<span class="hl kwd">dev.off</span><span class="hl std">()</span>
-</pre></div>
-</div></div>
-    <p>
-      <img src="fast-dependency-succeed.svg" width="70%">
-    </p>
-    <p>
-    TODO: Demonstration that CAN have dependency on more than
-    just current viewport (grob being drawn can have 'vp' argument that
-    contains a vpPath) because the whole vpTree (below the current
-    viewport) is recreated, not just the current viewport.
-  </p>
-    <h2>
-      <a name="solution-alternative">5. Alternative rasterizing approaches</a>
-    </h2>
-    <p>
-    Version with complete plot raster then cropping (allows for
-    dependency between raster grobs and other grobs).
-    NOTE that this requires R-devel !!! (for deviceLoc()).
-    Also NOTE that the cropping uses vertical offset with zero at top
-    (hence calculate top of viewport and subtract that from
-    full device height to get vertical offset).
-    ALSO also NOTE that the result is not quite aligned
-    (and this is NOT just rounding of pixel values for cropping)
+    The <code>grid.rasterize</code> function works by rasterizing 
+    only specific components of a plot.  An alternative approach
+    is to rasterize the entire plot and then just cut out, or crop, the 
+    relevant piece.  The following code demonstrates this idea.
+    The hard part involves calculating which part of the 
+    complete raster should be cropped.  At the time of writing,
+    the <code>deviceLoc</code>
+    function used in this code is only available in
+    the development version of R (to become R version 3.6.0).
   </p>
 <div class="chunk" id="croppanel"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl com">## External PNG version</span>
 <span class="hl std">cropenv</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">new.env</span><span class="hl std">()</span>
@@ -512,13 +714,82 @@ Tuesday 22 May 2018
       <img src="fast-crop.svg" width="70%">
     </p>
     <p>
-    TODO: Demonstration of limitation that crop method does not work for
-    rotated viewports (but per-grob-raster does).
+    One advantage of this approach is that the image we are rasterizing
+    can be arbitrarily complex;  because the entire image is 
+    rasterized, we do not have to worry about dependencies between grobs.
+    On the downside, this approach is more sensitive to any discrepancies
+    between a raster version of the plot and a vector version of the plot,
+    as evidenced by the fact that the grid lines are not quite aligned
+    properly in the image above.
   </p>
     <p>
-    Version where full plot is rasterized then clipping is used to
-    only show desired portion.  Need to use 'gridSVG' to get rotated
-    viewport clipping, plus to be able to apply clipping to a grob.
+    Another problem is that this approach will capture all drawing within 
+    the cropped region, whether we wanted to rasterize it or not.
+    The following code demonstrates this problem.  We have a plot as before,
+    but we add a label that overlaps with the panel data region.  This
+    means that (part of) the label is included in the rasterized result
+    even though we only want to rasterize the points and grid lines.
+  </p>
+<div class="chunk" id="overlap-problem"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">overlapEnv</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">new.env</span><span class="hl std">()</span>
+<span class="hl kwd">png</span><span class="hl std">(</span><span class="hl str">&quot;temp.png&quot;</span><span class="hl std">,</span> <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">7</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">7</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">)</span>
+<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
+       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
+           <span class="hl kwd">assign</span><span class="hl std">(</span><span class="hl str">&quot;panelXY&quot;</span><span class="hl std">,</span>
+                  <span class="hl kwd">deviceLoc</span><span class="hl std">(</span><span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl str">&quot;npc&quot;</span><span class="hl std">),</span> <span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl str">&quot;npc&quot;</span><span class="hl std">),</span> <span class="hl kwc">valueOnly</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">),</span>
+                  <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span>
+           <span class="hl kwd">assign</span><span class="hl std">(</span><span class="hl str">&quot;panelW&quot;</span><span class="hl std">,</span>
+                  <span class="hl kwd">convertWidth</span><span class="hl std">(</span><span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl str">&quot;npc&quot;</span><span class="hl std">),</span> <span class="hl str">&quot;in&quot;</span><span class="hl std">,</span> <span class="hl kwc">valueOnly</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">),</span>
+                  <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span>
+           <span class="hl kwd">assign</span><span class="hl std">(</span><span class="hl str">&quot;panelH&quot;</span><span class="hl std">,</span>
+                  <span class="hl kwd">convertHeight</span><span class="hl std">(</span><span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl str">&quot;npc&quot;</span><span class="hl std">),</span> <span class="hl str">&quot;in&quot;</span><span class="hl std">,</span> <span class="hl kwc">valueOnly</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">),</span>
+                  <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span>
+           <span class="hl kwd">panel.abline</span><span class="hl std">(</span><span class="hl kwc">h</span><span class="hl std">=</span><span class="hl kwd">seq</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl num">15000</span><span class="hl std">,</span> <span class="hl num">5000</span><span class="hl std">),</span> <span class="hl kwc">v</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl opt">:</span><span class="hl num">5</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">)</span>
+           <span class="hl kwd">panel.xyplot</span><span class="hl std">(x, y, ...)</span>
+           <span class="hl kwd">panel.text</span><span class="hl std">(</span><span class="hl num">4</span><span class="hl std">,</span> <span class="hl num">5000</span><span class="hl std">,</span> <span class="hl str">&quot;A LABEL\nTHAT ALSO\nGETS RASTERIZED&quot;</span><span class="hl std">)</span>
+       <span class="hl std">})</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+<span class="hl std">raster</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">image_read</span><span class="hl std">(</span><span class="hl str">&quot;temp.png&quot;</span><span class="hl std">)</span>
+<span class="hl std">rasterOverlap</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">image_crop</span><span class="hl std">(raster,</span>
+                         <span class="hl kwd">paste0</span><span class="hl std">(</span><span class="hl kwd">get</span><span class="hl std">(</span><span class="hl str">&quot;panelW&quot;</span><span class="hl std">,</span> <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">,</span> <span class="hl str">&quot;x&quot;</span><span class="hl std">,</span>
+                                <span class="hl kwd">get</span><span class="hl std">(</span><span class="hl str">&quot;panelH&quot;</span><span class="hl std">,</span> <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">,</span> <span class="hl str">&quot;+&quot;</span><span class="hl std">,</span>
+                                <span class="hl kwd">get</span><span class="hl std">(</span><span class="hl str">&quot;panelXY&quot;</span><span class="hl std">,</span> <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span><span class="hl opt">$</span><span class="hl std">x</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">,</span> <span class="hl str">&quot;+&quot;</span><span class="hl std">,</span>
+                                <span class="hl num">7</span><span class="hl opt">*</span><span class="hl num">72</span> <span class="hl opt">-</span> <span class="hl kwd">get</span><span class="hl std">(</span><span class="hl str">&quot;panelXY&quot;</span><span class="hl std">,</span> <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span><span class="hl opt">$</span><span class="hl std">y</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">),</span>
+                         <span class="hl kwc">repage</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
+<span class="hl std">overlapPoints</span> <span class="hl kwb">&lt;-</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
+    <span class="hl kwd">grid.raster</span><span class="hl std">(rasterOverlap)</span>
+<span class="hl std">}</span>
+</pre></div>
+</div></div>
+<div class="chunk" id="fast-overlap"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;fast-overlap.svg&quot;</span><span class="hl std">)</span>
+<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
+       <span class="hl kwc">panel</span><span class="hl std">=overlapPoints)</span>
+<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;overlap&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
+          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
+<span class="hl kwd">dev.off</span><span class="hl std">()</span>
+</pre></div>
+</div></div>
+    <p>
+      <img src="fast-overlap.svg" width="70%">
+    </p>
+    <p>
+    Finally, the cropping approach cannot deal with rasterizing 
+    content within a rotated viewport 
+    (but <code>grid.rasterize</code> can).
+  </p>
+    <h3>Rasterization by clipping</h3>
+    <p>
+    Yet another approach, that is very similar to the cropping approach,
+    is to generate a raster version of the complete plot and then
+    clip the raster to obtain the rasterized subset of the plot.
+    The following code implements this idea.  Notice that we are
+    generating SVG output with the 'gridSVG' package in this example
+    because that is the easiest way to apply clipping to a raster
+    after it has been drawn.  By using 'gridSVG' we also make it
+    possible to support rotated viewports (because 'gridSVG' can
+    clip to non-rectangular regions, unlike standard R graphics).
+    However, like the cropping approach,
+    this approach still suffers from the major failing that
+    it will include any overlapping output in the rasterized result.
   </p>
 <div class="chunk" id="clippanel"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">png</span><span class="hl std">(</span><span class="hl str">&quot;clip.png&quot;</span><span class="hl std">,</span> <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">7</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">7</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">)</span>
 <span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
@@ -546,71 +817,37 @@ Tuesday 22 May 2018
     <p>
       <img src="fast-clip.svg" width="70%">
     </p>
-    <p>
-    Demonstration of limitation that cannot have overlap with other grob
-    that we do NOT want to rasterize.
-  </p>
-<div class="chunk" id="overlap-problem"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">overlapEnv</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">new.env</span><span class="hl std">()</span>
-<span class="hl kwd">png</span><span class="hl std">(</span><span class="hl str">&quot;temp.png&quot;</span><span class="hl std">,</span> <span class="hl kwc">width</span><span class="hl std">=</span><span class="hl num">7</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">,</span> <span class="hl kwc">height</span><span class="hl std">=</span><span class="hl num">7</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">)</span>
-<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
-       <span class="hl kwc">panel</span><span class="hl std">=</span><span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
-           <span class="hl kwd">assign</span><span class="hl std">(</span><span class="hl str">&quot;panelXY&quot;</span><span class="hl std">,</span>
-                  <span class="hl kwd">deviceLoc</span><span class="hl std">(</span><span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl str">&quot;npc&quot;</span><span class="hl std">),</span> <span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl str">&quot;npc&quot;</span><span class="hl std">),</span> <span class="hl kwc">valueOnly</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">),</span>
-                  <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span>
-           <span class="hl kwd">assign</span><span class="hl std">(</span><span class="hl str">&quot;panelW&quot;</span><span class="hl std">,</span>
-                  <span class="hl kwd">convertWidth</span><span class="hl std">(</span><span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl str">&quot;npc&quot;</span><span class="hl std">),</span> <span class="hl str">&quot;in&quot;</span><span class="hl std">,</span> <span class="hl kwc">valueOnly</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">),</span>
-                  <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span>
-           <span class="hl kwd">assign</span><span class="hl std">(</span><span class="hl str">&quot;panelH&quot;</span><span class="hl std">,</span>
-                  <span class="hl kwd">convertHeight</span><span class="hl std">(</span><span class="hl kwd">unit</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl str">&quot;npc&quot;</span><span class="hl std">),</span> <span class="hl str">&quot;in&quot;</span><span class="hl std">,</span> <span class="hl kwc">valueOnly</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">),</span>
-                  <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span>
-           <span class="hl kwd">panel.abline</span><span class="hl std">(</span><span class="hl kwc">h</span><span class="hl std">=</span><span class="hl kwd">seq</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl num">15000</span><span class="hl std">,</span> <span class="hl num">5000</span><span class="hl std">),</span> <span class="hl kwc">v</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl opt">:</span><span class="hl num">5</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">)</span>
-           <span class="hl kwd">panel.xyplot</span><span class="hl std">(x, y, ...)</span>
-           <span class="hl kwd">panel.text</span><span class="hl std">(</span><span class="hl str">&quot;A LABEL\nTHAT ALSO\nGETS RASTERIZED&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">4</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">5000</span><span class="hl std">)</span>
-       <span class="hl std">})</span>
-<span class="hl kwd">dev.off</span><span class="hl std">()</span>
-<span class="hl std">raster</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">image_read</span><span class="hl std">(</span><span class="hl str">&quot;temp.png&quot;</span><span class="hl std">)</span>
-<span class="hl std">rasterOverlap</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">image_crop</span><span class="hl std">(raster,</span>
-                         <span class="hl kwd">paste0</span><span class="hl std">(</span><span class="hl kwd">get</span><span class="hl std">(</span><span class="hl str">&quot;panelW&quot;</span><span class="hl std">,</span> <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">,</span> <span class="hl str">&quot;x&quot;</span><span class="hl std">,</span>
-                                <span class="hl kwd">get</span><span class="hl std">(</span><span class="hl str">&quot;panelH&quot;</span><span class="hl std">,</span> <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">,</span> <span class="hl str">&quot;+&quot;</span><span class="hl std">,</span>
-                                <span class="hl kwd">get</span><span class="hl std">(</span><span class="hl str">&quot;panelXY&quot;</span><span class="hl std">,</span> <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span><span class="hl opt">$</span><span class="hl std">x</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">,</span> <span class="hl str">&quot;+&quot;</span><span class="hl std">,</span>
-                                <span class="hl num">7</span><span class="hl opt">*</span><span class="hl num">72</span> <span class="hl opt">-</span> <span class="hl kwd">get</span><span class="hl std">(</span><span class="hl str">&quot;panelXY&quot;</span><span class="hl std">,</span> <span class="hl kwc">envir</span><span class="hl std">=overlapEnv)</span><span class="hl opt">$</span><span class="hl std">y</span><span class="hl opt">*</span><span class="hl num">72</span><span class="hl std">),</span>
-                         <span class="hl kwc">repage</span><span class="hl std">=</span><span class="hl num">TRUE</span><span class="hl std">)</span>
-<span class="hl std">overlapPoints</span> <span class="hl kwb">&lt;-</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">,</span> <span class="hl kwc">...</span><span class="hl std">) {</span>
-    <span class="hl kwd">grid.raster</span><span class="hl std">(rasterOverlap)</span>
-<span class="hl std">}</span>
-</pre></div>
-</div></div>
-<div class="chunk" id="fast-overlap"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl kwd">svg</span><span class="hl std">(</span><span class="hl str">&quot;fast-overlap.svg&quot;</span><span class="hl std">)</span>
-<span class="hl kwd">xyplot</span><span class="hl std">(price</span> <span class="hl opt">~</span> <span class="hl std">carat, diamonds,</span> <span class="hl kwc">pch</span><span class="hl std">=</span><span class="hl num">16</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl kwd">rgb</span><span class="hl std">(</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">0</span><span class="hl std">,</span><span class="hl num">.1</span><span class="hl std">),</span>
-       <span class="hl kwc">panel</span><span class="hl std">=overlapPoints)</span>
-<span class="hl kwd">grid.text</span><span class="hl std">(</span><span class="hl str">&quot;overlap&quot;</span><span class="hl std">,</span> <span class="hl kwc">x</span><span class="hl std">=</span><span class="hl num">0</span><span class="hl std">,</span> <span class="hl kwc">y</span><span class="hl std">=</span><span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">just</span><span class="hl std">=</span><span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;left&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;top&quot;</span><span class="hl std">),</span>
-          <span class="hl kwc">gp</span><span class="hl std">=</span><span class="hl kwd">gpar</span><span class="hl std">(</span><span class="hl kwc">fontface</span><span class="hl std">=</span><span class="hl str">&quot;italic&quot;</span><span class="hl std">,</span> <span class="hl kwc">col</span><span class="hl std">=</span><span class="hl str">&quot;grey&quot;</span><span class="hl std">))</span>
-<span class="hl kwd">dev.off</span><span class="hl std">()</span>
-</pre></div>
-</div></div>
-    <p>
-      <img src="fast-overlap.svg" width="70%">
-    </p>
-    <p>
-    TODO: Add "crop" argument to grid.rasterize() ?  So can choose whether
-    to draw just relevant grob off-screen or crop entire off-screen plot.
-  </p>
-    <p>
-    TODO: Does a rasterizeGrob() function make sense ?
-    (rasterize as you draw?  pass to gridExtra::grid.arrange() ?)  
-  </p>
     <h2>
       <a name="discussion">6. Discussion</a>
     </h2>
     <p>
-    Why not use something else (like hexbin or smoothScatter or 2D density ...)?
-    Because sometimes you want all the points?
+    The problem we began with was how to rasterize just the points in
+    scatterplot with lots of points, while still keeping the rest of the
+    plot in a vector format.  We have outline several different solutions,
+    with a general-purpose solution implmented in the 
+    <code>grid.rasterize</code> function from the 'rasterize' package.
+  </p>
+    <h3>Was it all worth it?</h3>
+    <p>
+    A question that we have left begging is whether this sort of rasterization
+    is a good idea.  It certainly reduces file sizes dramatically, and hence
+    loading and viewing speeds, but there are other ways of 
+    tackling the problem of having many data symbols.
+    For example, we can use hexagonal binning (CITE), 
+    or 2D density contours (CITE), or the
+    <code>smoothScatter</code> function.
   </p>
     <p>
-    If we use grid.rasterize() with PDF output, we will end up with
-    multiple pages, so use onefile=FALSE.
-  </p>
-    <p>
+    One reason for retaining the visibility of all of the individual data
+    symbols is so that we can zoom into the plot to see details in
+    areas of high density (CITE).
+    Another motivation for providing a rasterization facility is to be able
+    to satisfy journal formatting requirements.
+    For example, 
+    if a journal demands EPS format figures, but we want to
+    include semitransparent components, we must resort to raster
+    versions of the semitransparent components (CITE).
+<!--
     It is not just large numbers of points that can be a nuisance; 
     another issue (see 
     <a href="https://osxastrotricks.wordpress.com/2014/01/19/rasterized-graphics-with-matplotlib-to-preserve-plot-transparencies-for-apj-figures/">here</a>
@@ -619,13 +856,44 @@ Tuesday 22 May 2018
     is producing EPS format (to satisfy journal requirements) for
     figures that contain semi-transparency (so you have to embed a raster
     within EPS).
+-->
+  </p>
+    <h3>How do we compare with matplotlib</h3>
+    <p>
+    The original R-help question pointed out that this sort of
+    rasterization is possible in matplotlib.  The 
+    <code>grid.rasterize</code> function solves the original problem
+    of rasterizing points within a scatterplot, but there are other
+    things that matplotlib can do.
   </p>
     <p>
-    matplotlib does not have the raster-by-name that I am shooting for,
-    but it does do raster-by-z-order (and you can specify z-order for
-    each component that you draw).
+    The matplotlib system has a concept of a "mixed mode" renderer (graphics
+    device) that is able to switch between vector and raster rendering (CITE).
+    This means that matplotlib
+    graphics functions can simply provide a "rasterize" argument
+    to have their output produced in raster format rather than vector format.
   </p>
     <p>
+    This is quite flexible, though it does require rasterization support
+    to be added to every graphics function (and users are dependent upon
+    developers to provide that support).  The <code>grid.rasterize</code>
+    approach can rasterize anything that is drawn with 'grid' and does
+    not require the cooperation of other developers who write functions
+    that draw with 'grid'.
+  </p>
+    <p>
+    Another matplotlib feature is the ability to apply rasterization
+    across a range of output by setting a "z-order" limit for
+    rasterization (effectively setting the default value for
+    "rasterize" arguments in graphics functions).
+    This is possible because all drawing in matplotlib can have
+    its z-order (drawing order) specified.
+    In R, 'grid' has no concept of z-order, but the ability to
+    name every piece of output (grob) and then rasterize by name
+    is arguably more flexible.
+  </p>
+    <!--
+  <p>
     matplotlib seems to have the concept of a 
     <a href="https://matplotlib.org/api/backend_mixed_api.html">mixed mode
     renderer</a> that can switch between vector and raster formatted output.
@@ -634,19 +902,28 @@ Tuesday 22 May 2018
     Its <a href="https://github.com/matplotlib/matplotlib/blob/master/src/_backend_agg_wrapper.cpp">raster backend</a> is based on the
     <a href="http://antigrain.com/about/index.html">Anit-Grain Geometry project</a>.
   </p>
+-->
     <h2>
       <a name="summary">7. Summary</a>
     </h2>
     <p>
+    The 'rasterize' package provides a function
+    <code>grid.rasterize</code> that can be used to produce rasterized 
+    versions of components of a plot.  For example, we can use this 
+    function to produce a scatterplot
+    that is in an SVG or PDF format, but has rasterized data symbols
+    (so that the overall size of the plot is much smaller when the plot
+    contains many data symbols).
   </p>
     <h2>
       <a name="requirements">8. Technical requirements</a>
     </h2>
     <p>
-    The examples and discussion in this document relate to
-    version 0.1 of the 'rasterize' package.
-    The cropping and clipping methods rely on deviceLoc from
-    R-to-be-3.5.0 (?)
+    The examples and discussion in this document relate to <a href="https://github.com/pmur002/rasterize/releases/tag/v0.1">version
+    0.1</a> of the 'rasterize' package.
+    The cropping and clipping approaches rely on the 
+    <code>deviceLoc</code> from the development version of R
+    (to become R version 3.6.0).
   </p>
     <p>
     This report was generated within a Docker container
