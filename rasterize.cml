@@ -67,11 +67,12 @@ options(bitmapType="cairo")
   </p>
   <hr/>
   <p>
-    This report explores ways to render selective components of a plot
-    in raster format, when the overall format of the plot is vector,
-    using R graphics.
-    An application of this technique involves drawing a large number
-    of raster data symbols within a PDF plot.
+    This report explores ways to render specific components of an R plot
+    in raster format, when the overall format of the plot is vector.
+    For example, we demonstrate ways to draw raster data symbols within a PDF
+    scatter plot.
+    A general solution is provided by the <code>grid.rasterize</code>
+    function from the R package 'rasterize'.
   </p>
 
   <toc/>
@@ -95,7 +96,8 @@ options(bitmapType="cairo")
     is an HTML report, but the 
     principle remains the same
     (and the file size issue becomes even more urgent).
-    This produces a 'lattice' scatter plot of the <code>diamonds</code> data set
+    This code produces a 'lattice' (<a href="#pkg:lattice"/>)
+    scatter plot of the <code>diamonds</code> data set
     with reference grid lines.  We define a <code>panelDefault</code>
     function so that we can reproduce the main content of the plot 
     reliably later on, the grid lines will help us to ensure that we
@@ -154,8 +156,8 @@ file.size("slow.svg")
     In the R-help post, it was pointed out that  it is possible to
     draw a PDF plot in which only the data symbols are rasterized using
     <a href="http://www.astrobetter.com/blog/2014/01/17/slim-down-your-bloated-graphics/">Python's matplotlib</a> 
-    (CITE!)
-    (the <code>plot</code> function in matplotlib 
+    (<a href="#Hunter:2007"/>;
+    the <code>plot</code> function in matplotlib 
     has a <code>rasterized</code> argument).
     In this report, we will investigate whether we can do the same sort
     of thing in R.  Spoiler:  the answer is "yes", but there are
@@ -172,7 +174,9 @@ file.size("slow.svg")
     'lattice' panel, sets up a 'grid' viewport with the same scales
     as the panel, draws the data symbols (just as 'lattice' would have
     done itself), closes the PNG device, reads the resulting PNG file
-    into R and draws that raster image within the 'lattice' panel.
+    into R (using <code>readPNG</code> from the 'png' package;
+    <a href="#pkg:png"/>) 
+    and draws that raster image within the 'lattice' panel.
   </p>
   <rcode id="pnglib">
 library(png)    
@@ -261,7 +265,7 @@ file.size("fast-replace.svg")
 
   <h2><a name="solution-general">Rasterizing any 'grid' output</a></h2>
   <p>
-    The package 'rasterize' provides a function 
+    The package 'rasterize' (<a href="#pkg:rasterize"/>) provides a function 
     <code>grid.rasterize</code> that generalises and extends
     the two approaches described in the previous section.
   </p>
@@ -292,10 +296,11 @@ dev.off()
 
   <p>
     If the first argument to <code>grid.rasterize</code> is 
-    the name of a grob (or a gPath), then that grob is 
+    the name of a grob (or a gPath), and that grob
+    exists in the current image, then that grob is 
     replaced by a raster rendering of the grob.
     The following code demonstrates this by first drawing
-    a 'lattice' plot (with rasterized panel contents)
+    a 'lattice' plot (with rasterized panel contents as above)
     and then rasterizes the x-axis label on the plot.
     Notice that we have to navigate to the viewport
     that the x-axis label was drawn within so that the
@@ -322,9 +327,10 @@ dev.off()
     In the plot above, it should be possible to see that the x-axis label
     is a raster version because it looks a little blurry.  That is because
     the default resolution for the rasterizing process is 72 dpi.
-    We can control the resolution with the <code>res</code> argument
+    We can control the resolution of the rasterized content
+    with the <code>res</code> argument
     to <code>grid.rasterize</code>.  The following code increases the
-    resolution up to 200 dpi.
+    resolution of the rasterized content up to 200 dpi.
   </p>
   <rcode id="rasterize-hires" results="hide" fig.keep="none" eval="TRUE">
 svg("rasterize-hires.svg")
@@ -349,7 +355,7 @@ dev.off()
     points).  The following code shows how this might work; notice 
     that we have to call <code>grid.force</code> after drawing the
     'ggplot2' plot in order to gain access to the low-level 'grid' grobs
-    (and the 'grid' viewports) 
+    (and viewports) 
     in the plot.
   </p>
   <rcode id="rasterize-ggplot2" results="hide" fig.keep="none" eval="TRUE">
@@ -373,7 +379,7 @@ dev.off()
     of the diamonds plot (with rasterized points).  In this case,
     the important step is to convert the 'graphics' plot to a 'grid'
     version, using <code>grid.echo</code> from the 'gridGraphics'
-    package.
+    package (<a href="#pkg:gridGraphics"/>).
   </p>
   <rcode id="rasterize-graphics" results="hide" fig.keep="none" eval="TRUE">
 svg("rasterize-graphics.svg")
@@ -476,7 +482,8 @@ dev.off()
   </p>
   <p>
     The easiest way to ensure this consistency in R is to make use
-    of graphics devices that are based on the Cairo graphics library (CITE!).
+    of graphics devices that are based on the Cairo graphics library 
+    (<a href="#cairo"/>).
     For example, the <code>svg</code> device used in the examples in this
     report is Cairo-based and this report uses 
     <code>options(bitmapType="cairo")</code> to ensure that the
@@ -549,9 +556,11 @@ system("convert -density 150 rasterize-post-2.pdf rasterize-post.png")
     One change that we could make is to draw the temporary raster image
     in memory so that we do not have to touch the file system (when
     we create a temporary PNG image).  This is possible via the
-    'magick' package (CITE!).  The following code is a variation
+    'magick' package (<a href="#pkg:magick"/>).  
+    The following code is a variation
     on our very first example, but it uses 
-    <code>magick::image_graph</code> rather than the <code>png</code>
+    <code>image_graph</code> from the 'magick' package 
+    rather than the <code>png</code>
     device to render the temporary raster image.
   </p>
   <rcode id="magicklib" message="FALSE">
@@ -592,8 +601,9 @@ dev.off()
 
   <h3>Rasterization by cropping</h3>
   <p>
-    The <code>grid.rasterize</code> function works by rasterizing 
-    only specific components of a plot.  An alternative approach
+    The <code>grid.rasterize</code> function works by creating a raster
+    version of 
+    only a specific sub-region of a plot.  An alternative approach
     is to rasterize the entire plot and then just cut out, or crop, the 
     relevant piece.  The following code demonstrates this idea.
     The hard part involves calculating which part of the 
@@ -685,8 +695,8 @@ dev.off()
     Another problem is that this approach will capture all drawing within 
     the cropped region, whether we wanted to rasterize it or not.
     The following code demonstrates this problem.  We have a plot as before,
-    but we add a label that overlaps with the panel data region.  This
-    means that (part of) the label is included in the rasterized result
+    but we add a label within the panel data region.  This
+    means that the label is included in the rasterized result
     even though we only want to rasterize the points and grid lines.
   </p>
   <rcode id="overlap-problem" results="hide">
@@ -743,7 +753,8 @@ dev.off()
     is to generate a raster version of the complete plot and then
     clip the raster to obtain the rasterized subset of the plot.
     The following code implements this idea.  Notice that we are
-    generating SVG output with the 'gridSVG' package in this example
+    generating SVG output with the 'gridSVG' package 
+    (<a href="#pkg:gridSVG"/>) in this example
     because that is the easiest way to apply clipping to a raster
     after it has been drawn.  By using 'gridSVG' we also make it
     possible to support rotated viewports (because 'gridSVG' can
@@ -781,9 +792,9 @@ dev.off()
 
   <h2><a name="discussion">Discussion</a></h2>
   <p>
-    The problem we began with was how to rasterize just the points in
+    The problem we began with was how to rasterize just the points in a
     scatterplot with lots of points, while still keeping the rest of the
-    plot in a vector format.  We have outline several different solutions,
+    plot in a vector format.  We have outlined several different solutions,
     with a general-purpose solution implmented in the 
     <code>grid.rasterize</code> function from the 'rasterize' package.
   </p>
@@ -794,20 +805,25 @@ dev.off()
     is a good idea.  It certainly reduces file sizes dramatically, and hence
     loading and viewing speeds, but there are other ways of 
     tackling the problem of having many data symbols.
-    For example, we can use hexagonal binning (CITE), 
-    or 2D density contours (CITE), or the
+    For example, we could use <code>hexbinplot</code> from the
+    'hexbin' package (<a href="#pkg:hexbin"/>), 
+    or plot a 2D density estimate with <code>filled.contour</code>, or use the
     <code>smoothScatter</code> function.
   </p>
   <p>
-    One reason for retaining the visibility of all of the individual data
+    Some reasons for retaining all of the individual data symbols
+    are mentioned in a 
+    <a href="http://www.astrobetter.com/blog/2014/01/17/slim-down-your-bloated-graphics/">discussion</a> 
+    that was referenced by the original R-help post.
+    For example, one reason for retaining the individual data
     symbols is so that we can zoom into the plot to see details in
-    areas of high density (CITE).
+    areas of high density.
     Another motivation for providing a rasterization facility is to be able
     to satisfy journal formatting requirements.
     For example, 
     if a journal demands EPS format figures, but we want to
     include semitransparent components, we must resort to raster
-    versions of the semitransparent components (CITE).
+    versions of the semitransparent components.
 <!--
     It is not just large numbers of points that can be a nuisance; 
     another issue (see 
@@ -829,8 +845,10 @@ dev.off()
     things that matplotlib can do.
   </p>
   <p>
-    The matplotlib system has a concept of a "mixed mode" renderer (graphics
-    device) that is able to switch between vector and raster rendering (CITE).
+    The matplotlib system has a concept of a 
+    <a href="https://matplotlib.org/api/backend_mixed_api.html">"mixed mode"
+    renderer</a> (graphics
+    device) that is able to switch between vector and raster rendering.
     This means that matplotlib
     graphics functions can simply provide a "rasterize" argument
     to have their output produced in raster format rather than vector format.
@@ -883,8 +901,9 @@ dev.off()
     href="https://github.com/pmur002/rasterize/releases/tag/v0.1">version
     0.1</a> of the 'rasterize' package.
     The cropping and clipping approaches rely on the 
-    <code>deviceLoc</code> from the development version of R
-    (to become R version 3.6.0).
+    <code>deviceLoc</code> function
+    from the development version of R (revision r74634),
+    which will become R version 3.6.0.
   </p>
   <p>
     This report was generated within a Docker container
@@ -925,7 +944,7 @@ dev.off()
   <h2>How to cite this document</h2>
   <p>
     Murrell, P. (2018). "Selective Raster Graphics" 
-    Technical Report 2018-??, Department of Statistics, The University of Auckland. 
+    Technical Report 2018-05, Department of Statistics, The University of Auckland. 
     [ <a href="how-to-cite.bib">bib</a> ] 
   </p>
 
@@ -933,6 +952,36 @@ dev.off()
   <ul style="list-style-type: none">
     <li>
       <a name="R"/>
+    </li>
+    <li>
+      <a name="pkg:rasterize"/>
+    </li>
+    <li>
+      <a name="pkg:lattice"/>
+    </li>
+    <li>
+      <a name="pkg:ggplot2"/>
+    </li>
+    <li>
+      <a name="pkg:png"/>
+    </li>
+    <li>
+      <a name="pkg:gridGraphics"/>
+    </li>
+    <li>
+      <a name="pkg:magick"/>
+    </li>
+    <li>
+      <a name="pkg:gridSVG"/>
+    </li>
+    <li>
+      <a name="pkg:hexbin"/>
+    </li>
+    <li>
+      <a name="Hunter:2007"/>
+    </li>
+    <li>
+      <a name="cairo"/>
     </li>
   </ul>
 
